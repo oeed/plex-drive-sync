@@ -2,5 +2,7 @@ module Lib
     ( someFunc
     ) where
 
+import Tautulli.Request
+
 someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+someFunc = getLibraryPage 1

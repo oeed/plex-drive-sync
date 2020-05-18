@@ -34,6 +34,9 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , aeson
+    , req
+    , disk-free-space
   default-language: Haskell2010
 
 executable plex-drive-sync-exe
