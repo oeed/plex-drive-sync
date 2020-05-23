@@ -1,30 +1,29 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Tautulli.Request () where
+module Tautulli.Request (
+  getTautulliResponse,
+  getTautulliResponseNoParams
+) where
 
-import Control.Monad.IO.Class
-import Data.Aeson
-import Network.HTTP.Req
+-- import Control.Monad.IO.Class
+-- import Data.Aeson
+import Data.Text
+import Data.Aeson.Lens (_String, key)
+import Network.Wreq
+import Control.Lens
+import Data.Text.Encoding (encodeUtf8)
+import Data.ByteString.Lazy
+import Config (APIConfig, api, key, username, password, url, readConfig)
 
-apiKey :: String
-apiKey = "ef77bd7822ba4ffcad33970338ac53b0"
+getTautulliResponse :: APIConfig -> Text -> (Options -> Options) -> IO ByteString
+getTautulliResponse config cmd options = do
+  let opts = defaults & param "apikey" .~ [Config.key config]
+                      & param "cmd" .~ [cmd]
+                      & options
+                      & auth ?~ basicAuth (encodeUtf8 (username config)) (encodeUtf8 (password config))
+  r <- getWith opts (url config)
+  return (r ^. responseBody)
 
-getTautulliResponse :: (QueryParam a) => String -> [a] -> IO ()
--- You can either make your monad an instance of 'MonadHttp', or use
--- 'runReq' in any IO-enabled monad without defining new instances.
-getTautulliResponse cmd queryParams = runReq defaultHttpConfig $ do
-  r <-
-    req
-      POST -- method
-      (https "media.hpg.nz" /: "tautilli" /: "api" /: "v2") -- safe by construction URL
-      NoReqBody -- use built-in options or add your own
-      jsonResponse $ -- specify how to interpret response
-        "apikey" =: apiKey <>
-        "cmd" =: cmd <>
-        basicAuth "" ""
-  liftIO $ print (responseBody r :: Value)
+getTautulliResponseNoParams config cmd = getTautulliResponse config cmd id
 
-getTautulliResponseNoParams :: String -> IO ()
-getTautulliResponseNoParams cmd = getTautulliResponse cmd ([] :: [FormUrlEncodedParam])
-
-getArnold = getTautulliResponseNoParams "arnold"
+getArnold config = getTautulliResponseNoParams config "arnold"
