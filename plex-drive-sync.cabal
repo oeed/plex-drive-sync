@@ -37,6 +37,7 @@ library
     , aeson
     , text
     , yaml
+    , vector
     , bytestring
     , lens-aeson
     , lens
