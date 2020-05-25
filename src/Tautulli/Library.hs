@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -26,10 +27,25 @@ intToText = T.toStrict . B.toLazyText . B.decimal
 
 data MediaItem = MediaItem {
   title :: T.Text,
-  media_type :: T.Text
+  mediaType :: T.Text,
+  addedAt :: Int,
+  last_played :: Maybe Int,
+  file_size :: Int
 } deriving (Generic, Show)
 
-instance FromJSON MediaItem
+instance FromJSON MediaItem where
+  parseJSON = withObject "MediaItem" $ \o -> do
+    title <- o .: "title"
+    mediaType <- o .: "media_type"
+    -- this v v v
+    x <- o .: "added_at" :: Parser String
+    let addedAt = read x
+    -- 
+    last_played <- o .: "last_played"
+    file_size <- o .: "file_size"
+    return MediaItem{..}
+
+-- instance FromJSON MediaItem
 
 parsePage :: Value -> Parser [MediaItem]
 parsePage = withObject "response" $ \o -> do
